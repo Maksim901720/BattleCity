@@ -3,6 +3,42 @@
 
 #include <iostream>
 
+GLfloat point[] = {
+     0.0f,   0.5f, 0.0f,
+     0.5f,  -0.5f, 0.0f,
+    -0.5f,  -0.5f, 0.0f
+};
+
+GLfloat colors[] = {
+    1.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 1.0f
+};
+
+// программа вертексного шейдера
+// будет вызываться отдельно для каждой вершины
+const char* vertex_shader =
+"#version 460\n"                                     // используемая версия OpenGL
+"layout(location = 0) in vec3 vertex_position;"      // входная позиция вершины
+"layout(location = 1) in vec3 vertex_color;"         // входной цвет вершины
+"out vec3 color;"                                    
+"void main() {"
+"   color = vertex_color;"                           // цвет выходной вершины(попадает в фершинный шейдер)
+"   gl_Position = vec4(vertex_position, 1.0);"       // позиция выходной вершины
+"}";
+
+// программа для фрагментного шейдера
+//  будет вызываться для каждой тройки вершин
+// и передавать каждый пиксель в этом треугольнике
+// с интерполированным цветом
+const char* fragment_shader =
+"#version 460\n"
+"in vec3 color;"                                      // интерполированный цвет пикселя
+"out vec4 frag_color;"                                
+"void main() {"
+"   frag_color = vec4(color, 1.0f);"                  // выходной цвет
+"}";
+
 int g_windowWidth = 640,
     g_windowHeight = 480;
 
@@ -69,13 +105,83 @@ int main(void)
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
     //std::cout << "OpenGL " << GLVersion.major << "." << GLVersion.minor << std::endl;
 
+    // установить цвет зарисовки окна при его очищении
     glClearColor(1, 1, 0, 1);
+
+    // создаём вершинный шейдер
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);  
+    // передаём шейдеру исходный код
+    glShaderSource(vs, 1, &vertex_shader, nullptr);
+    // компилируем
+    glCompileShader(vs);
+
+    // создаём фрагментный шейдер
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    // передаём шейдеру исходный код
+    glShaderSource(fs, 1, &fragment_shader, nullptr);
+    // компилируем
+    glCompileShader(fs);
+
+    // сгенерировать шейдерную программу
+    GLuint shader_program = glCreateProgram();
+    // присоеденить к шейдерной программе наши фрагментый и вершинный шейдеры
+    glAttachShader(shader_program, vs);
+    glAttachShader(shader_program, fs);
+    // выполняем линковку шейдеров
+    glLinkProgram(shader_program);
+
+    // удаляем шейдеры
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    // сгенерировать один объектный буфер вершин(VBO) для позиций
+    GLuint points_vbo = 0;
+    glGenBuffers(1, &points_vbo);
+    // подключаем его и делаем текущим
+    glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+    // указываем массив point в оперативной памяти для VBO, даём подсказку, 
+    // что память в массиве point не будет записываться
+    // (выполняется для текущего буфера), теперь этот массив есть в памяти GPU
+    glBufferData(GL_ARRAY_BUFFER, sizeof(point), point, GL_STATIC_DRAW);
+
+    // аналогично для буфера цветов
+    GLuint colors_vbo = 0;
+    glGenBuffers(1, &colors_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+
+    // создаём 1 объект массива векторов(VAO)
+    // при его выборе он выдаёт GPU информацию о всех привязанных VBO и как их читать
+    GLuint vao = 0;
+    glGenVertexArrays(1, &vao);
+    // делаем его текущим
+    glBindVertexArray(vao);
+
+    // включить позицию 0 в шейдере(location = 0)
+    glEnableVertexAttribArray(0);
+    // привязываем буфер points_vbo к позиции 0(указываем брать по 3 элемента из VBO,
+    // тип данных, не переводить в относительные координаты, все данные идут в перемешку,
+    // и нет смещения в массиве)
+    glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    // аналогично с позицией 1
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     // цикл до закрытия окна пользователем
     while (!glfwWindowShouldClose(pWindow))  
     {
-        // ренедеринг здесь
+        // очистить экран
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // подключаем шейдеры для зарисовки
+        glUseProgram(shader_program);
+        // выбираем нужный VAO(в случае если он 1 можно пропустить)
+        glBindVertexArray(vao);
+        // рисуем треугольники(3 вершины)
+        glDrawArrays(GL_TRIANGLES, 0, 3);;
 
         // поменять местами передний и задний буферы
         glfwSwapBuffers(pWindow);
