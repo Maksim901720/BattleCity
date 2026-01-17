@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "Renderer/ShaderProgram.h"
+
 GLfloat point[] = {
      0.0f,   0.5f, 0.0f,
      0.5f,  -0.5f, 0.0f,
@@ -108,31 +110,13 @@ int main(void)
     // установить цвет зарисовки окна при его очищении
     glClearColor(1, 1, 0, 1);
 
-    // создаём вершинный шейдер
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);  
-    // передаём шейдеру исходный код
-    glShaderSource(vs, 1, &vertex_shader, nullptr);
-    // компилируем
-    glCompileShader(vs);
-
-    // создаём фрагментный шейдер
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    // передаём шейдеру исходный код
-    glShaderSource(fs, 1, &fragment_shader, nullptr);
-    // компилируем
-    glCompileShader(fs);
-
-    // сгенерировать шейдерную программу
-    GLuint shader_program = glCreateProgram();
-    // присоеденить к шейдерной программе наши фрагментый и вершинный шейдеры
-    glAttachShader(shader_program, vs);
-    glAttachShader(shader_program, fs);
-    // выполняем линковку шейдеров
-    glLinkProgram(shader_program);
-
-    // удаляем шейдеры
-    glDeleteShader(vs);
-    glDeleteShader(fs);
+    std::string vertexShader(vertex_shader);
+    std::string fragmentShader(fragment_shader);
+    Renderer::ShaderProgram shaderProgram(vertexShader, fragmentShader);
+    if (!shaderProgram.isCompiled()) {
+        std::cerr << "Can't create shader program" << std::endl;
+        return -1;
+    }
 
     // сгенерировать один объектный буфер вершин(VBO) для позиций
     GLuint points_vbo = 0;
@@ -177,7 +161,7 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         // подключаем шейдеры для зарисовки
-        glUseProgram(shader_program);
+        shaderProgram.use();
         // выбираем нужный VAO(в случае если он 1 можно пропустить)
         glBindVertexArray(vao);
         // рисуем треугольники(3 вершины)
