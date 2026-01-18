@@ -8,6 +8,7 @@ namespace Renderer {
 	{
 		GLuint vertexShaderID;
 		if (!createShader(vertexShader, GL_VERTEX_SHADER, vertexShaderID)) {
+			std::cout << fragmentShader << std::endl;
 			std::cerr << "VERTEX::SHADER: compile time error" << std::endl;
 			return;
 		}
