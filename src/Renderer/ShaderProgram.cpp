@@ -1,6 +1,7 @@
 #include "ShaderProgram.h"
 
 #include <iostream>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Renderer {
 
@@ -90,5 +91,18 @@ namespace Renderer {
 
 		shaderProgram.m_ID = 0;
 		shaderProgram.m_isCompiled = false;
+	}
+
+	void ShaderProgram::setInt(const std::string& name, const GLint value)
+	{
+		// соддаём переменную uniform int в шейдерной программе. glGetUniformLocation получает шейдерную программу 
+		// и имя переменной и возращает её локацию. glUniform1i установит этой переменной указанное значение
+		glUniform1i(glGetUniformLocation(m_ID, name.c_str()), value);
+	}
+
+	void ShaderProgram::setMatrix4(const std::string& name, const glm::mat4& matrix)
+	{
+		// соддаём 1 переменную uniform matrix4vf в шейдерной программе, которую не нужно транспонировать
+		glUniformMatrix4fv(glGetUniformLocation(m_ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 }

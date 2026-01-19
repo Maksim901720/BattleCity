@@ -12,8 +12,13 @@ add_executable(${PROJECT_NAME}
 	src/main.cpp
 	src/Renderer/ShaderProgram.cpp
 	src/Renderer/ShaderProgram.h
+	src/Renderer/Texture2D.h
+	src/Renderer/Texture2D.cpp
+	src/Renderer/Sprite.cpp
+	src/Renderer/Sprite.h
 	src/Resource/ResourceManager.cpp
 	src/Resource/ResourceManager.h
+	src/Resource/stb_image.h
 )
 
 # стандарт C++
@@ -26,6 +31,9 @@ target_link_libraries(${PROJECT_NAME} glfw)
 # подключаем GLAD
 add_subdirectory(external/glad)
 target_link_libraries(${PROJECT_NAME} glad)
+
+# подключаем glm
+include_directories(external/glm)
 
 # указываем куда сохранять бинарные файлы
 # CMAKE_BINARY_DIR - путь до директории сборки

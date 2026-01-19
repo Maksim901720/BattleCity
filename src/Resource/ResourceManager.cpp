@@ -1,9 +1,17 @@
 #include "ResourceManager.h"
 #include "../Renderer/ShaderProgram.h"
+#include "../Renderer/Texture2D.h"
+#include "../Renderer/Sprite.h"
+
 
 #include <sstream>
 #include <fstream>
 #include <iostream>
+
+// используем библиоткеу stb_image, загружем только png файлы
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#include "stb_image.h"
 
 ResourceManager::ResourceManager(const std::string& executablePath)
 {
@@ -26,7 +34,7 @@ std::string ResourceManager::getFileString(const std::string& relativeFilePath) 
 	return buffer.str();
 }
 
-std::shared_ptr<Renderer::ShaderProgram> ResourceManager::loadShaders(const std::string& shaderName,
+std::shared_ptr<Renderer::ShaderProgram> ResourceManager::loadShaderProgram(const std::string& shaderName,
 	const std::string& vertexPath, const std::string& fragmentPath)
 {
 	std::string vertexString = getFileString(vertexPath);
@@ -53,11 +61,76 @@ std::shared_ptr<Renderer::ShaderProgram> ResourceManager::loadShaders(const std:
 	}
 }
 
-std::shared_ptr<Renderer::ShaderProgram> ResourceManager::getShaders(const std::string& shaderName)
+std::shared_ptr<Renderer::ShaderProgram> ResourceManager::getShaderProgram(const std::string& shaderName)
 {
 	ShaderProgramsMap::const_iterator it = m_shaderPrograms.find(shaderName);
 	if (it != m_shaderPrograms.end())
 		return it->second;
 	std::cerr << "Can't find the shader program: " << shaderName << std::endl;
+	return nullptr;
+}
+
+std::shared_ptr<Renderer::Texture2D> ResourceManager::loadTexture(const std::string& textureName, const std::string& texturePath)
+{
+	int channels = 0;
+	int width = 0;
+	int height = 0;
+
+	// указываем загружать байты последовательно с нижнего левого угла для дальнейшего использования в OpenGL
+	// (по умолчанию начинает с левого верхнего угла)
+	stbi_set_flip_vertically_on_load(true);
+	// загружем указанную текстуру, получаем её ширину высоту, количество каналов(3 для RGB, 4 для RGBA).
+	// Так как мы изначально не знаем количество каналов, указываем 0
+	unsigned char *pixels = stbi_load(std::string(m_path + "/" + texturePath).c_str(), &width, &height, &channels, 0);
+
+	if (!pixels) {
+		std::cerr << "Can't load texture: " << texturePath << std::endl;
+		return nullptr;
+	}
+
+	std::shared_ptr<Renderer::Texture2D> newTexture = m_textures.emplace(textureName, std::make_shared<Renderer::Texture2D>(width, height, 
+									pixels, channels, GL_NEAREST, GL_CLAMP_TO_EDGE)).first->second;
+
+	// очищаем выделенные ресурсы для пикселей
+	stbi_image_free(pixels);
+	return newTexture;
+}
+
+std::shared_ptr<Renderer::Texture2D> ResourceManager::getTexture(const std::string& textureName)
+{
+	TexturesMaps::const_iterator it = m_textures.find(textureName);
+	if (it != m_textures.end())
+		return it->second;
+	std::cerr << "Can't find the texture: " << textureName << std::endl;
+	return nullptr;
+}
+
+std::shared_ptr<Renderer::Sprite> ResourceManager::loadSprite(const std::string& spriteName, const std::string& textureName, 
+	const std::string& shaderName, const unsigned int spriteWidth, const unsigned int spriteHeight)
+{
+	auto pTexture = getTexture(textureName);
+	if (!pTexture) {
+		std::cerr << "Can't find the texture: " << textureName << " for the sprite: " << spriteName << std::endl;
+		return nullptr;
+	}
+
+	auto pShader = getShaderProgram(shaderName);
+	if (!pShader) {
+		std::cerr << "Can't find the shared program: " << shaderName << " for the shader sprite: " << spriteName << std::endl;
+		return nullptr;
+	}
+
+	std::shared_ptr<Renderer::Sprite> newSprite = m_sprites.emplace(spriteName, std::make_shared<Renderer::Sprite>(pTexture, pShader, 
+			glm::vec2(0.0f, 0.0f), glm::vec2(spriteWidth, spriteHeight), 0.f)).first->second;
+
+	return newSprite;
+}
+
+std::shared_ptr<Renderer::Sprite> ResourceManager::getSprite(const std::string& spriteName)
+{
+	SpritesMaps::const_iterator it = m_sprites.find(spriteName);
+	if (it != m_sprites.end())
+		return it->second;
+	std::cerr << "Can't find the texture: " << spriteName << std::endl;
 	return nullptr;
 }

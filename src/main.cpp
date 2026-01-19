@@ -1,15 +1,20 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/vec2.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
 
 #include "Renderer/ShaderProgram.h"
+#include "Renderer/Texture2D.h"
 #include "Resource/ResourceManager.h"
+#include "Renderer/Sprite.h"
 
 GLfloat point[] = {
-     0.0f,   0.5f, 0.0f,
-     0.5f,  -0.5f, 0.0f,
-    -0.5f,  -0.5f, 0.0f
+     0.0f,   50.f, 0.0f,
+     50.f,  -50.f, 0.0f,
+    -50.f,  -50.f, 0.0f
 };
 
 GLfloat colors[] = {
@@ -18,18 +23,22 @@ GLfloat colors[] = {
     0.0f, 0.0f, 1.0f
 };
 
+GLfloat texCoord[] = {
+    0.5f, 1.0f, 
+    1.0f, 0.0f, 
+    0.0f, 0.0f, 
+};
 
-int g_windowWidth = 640,
-    g_windowHeight = 480;
+glm::ivec2 g_windowSize(640, 480);
 
 // обрабатываем событие изменения окна
 void glfwWindowSizeCallback(GLFWwindow* pWindow, int width, int height)
 {
-    g_windowWidth = width;
-    g_windowHeight = height;
+    g_windowSize.x = width;
+    g_windowSize.y = height;
 
     // показываем OpneGL, в какой области окна рисовать
-    glViewport(0, 0, g_windowWidth, g_windowHeight);
+    glViewport(0, 0, g_windowSize.x, g_windowSize.y);
 }
 
 // обрабатываем события нажатия клавиш
@@ -59,7 +68,7 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Создать окно оконного режима и его контекст OpenGL 
-    GLFWwindow *pWindow = glfwCreateWindow(g_windowWidth, g_windowHeight, "Battle city", nullptr, nullptr);
+    GLFWwindow *pWindow = glfwCreateWindow(g_windowSize.x, g_windowSize.y, "Battle city", nullptr, nullptr);
     if (!pWindow) {
         std::cerr << "failed create window" << std::endl;
         glfwTerminate();
@@ -91,11 +100,26 @@ int main(int argc, char *argv[])
     {   // создаём отдельную область видимости, так как нам нужно, чтобы менеджер ресурсов освободил ресурсы до 
         // вызова glfwTerminate, который закроет контекст OpenGL
         ResourceManager resourceManager(argv[0]);
-        auto pDefaultShaderProgram = resourceManager.loadShaders("DefaultShader", "res/shaders/vertex.txt", "res/shaders/fragment.txt");
+        auto pDefaultShaderProgram = resourceManager.loadShaderProgram("DefaultShader", "res/shaders/vertex.txt", "res/shaders/fragment.txt");
         if (!pDefaultShaderProgram) {
             std::cerr << "Can't create shader program: " << "DefaultShader" << std::endl;
             return -1;
         }
+
+        auto pSpriteShaderProgram = resourceManager.loadShaderProgram("SpriteShader", "res/shaders/vSprite.txt", "res/shaders/fSprite.txt");
+        if (!pSpriteShaderProgram) {
+            std::cerr << "Can't create shader program: " << "SpriteShader" << std::endl;
+            return -1;
+        }
+        
+        auto tex = resourceManager.loadTexture("DefaultTexture", "res/textures/map_16x16.png");
+
+        auto pSprite = resourceManager.loadSprite("NewSprite", "DefaultTexture", "SpriteShader", 50, 100);
+        if (!pSprite) {
+            std::cerr << "Can't create sprite: " << "NewSprite" << std::endl;
+            return -1;
+        }
+        pSprite->setPosition(glm::vec2(300, 100));
 
         // сгенерировать один объектный буфер вершин(VBO) для позиций
         GLuint points_vbo = 0;
@@ -112,6 +136,11 @@ int main(int argc, char *argv[])
         glGenBuffers(1, &colors_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+
+        GLuint texCoord_vbo = 0;
+        glGenBuffers(1, &texCoord_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, texCoord_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(texCoord), texCoord, GL_STATIC_DRAW);
         
         // создаём 1 объект массива векторов(VAO)
         // при его выборе он выдаёт GPU информацию о всех привязанных VBO и как их читать
@@ -133,6 +162,31 @@ int main(int argc, char *argv[])
         glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, texCoord_vbo);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        // устанавливаем перемеенную tex в текстуру из 0-го слота
+        pDefaultShaderProgram->use();
+        pDefaultShaderProgram->setInt("tex", GL_TEXTURE0);
+
+        // создаём еденичную матрицу
+        glm::mat4 modelMatrix_1 = glm::mat4(1.f);
+        // перемещаем эту матрицу на вектор (100, 200, 0)
+        modelMatrix_1 = glm::translate(modelMatrix_1, glm::vec3(100.f, 200.f, 0.f));
+
+        glm::mat4 modelMatrix_2 = glm::mat4(1.f);
+        modelMatrix_2 = glm::translate(modelMatrix_2, glm::vec3(590.f, 200.f, 0.f));
+
+        // матрица перевода в офрографическое отображение камеры 
+        glm::mat4 projectionMatrix = glm::ortho(0.f, static_cast<float>(g_windowSize.x), 0.f, static_cast<float>(g_windowSize.y), -100.f, 100.f);
+
+        pDefaultShaderProgram->setMatrix4("projectionMat", projectionMatrix);
+
+        pSpriteShaderProgram->use();
+        pSpriteShaderProgram->setInt("tex", GL_TEXTURE0);
+        pSpriteShaderProgram->setMatrix4("projectionMat", projectionMatrix);
+
         // цикл до закрытия окна пользователем
         while (!glfwWindowShouldClose(pWindow))
         {
@@ -143,8 +197,15 @@ int main(int argc, char *argv[])
             pDefaultShaderProgram->use();
             // выбираем нужный VAO(в случае если он 1 можно пропустить)
             glBindVertexArray(vao);
-            // рисуем треугольники(3 вершины)
-            glDrawArrays(GL_TRIANGLES, 0, 3);;
+            tex->bind();
+
+            pDefaultShaderProgram->setMatrix4("modelMat", modelMatrix_1);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+
+            pDefaultShaderProgram->setMatrix4("modelMat", modelMatrix_2);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+
+            pSprite->render();
 
             // поменять местами передний и задний буферы
             glfwSwapBuffers(pWindow);
