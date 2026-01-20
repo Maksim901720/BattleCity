@@ -19,6 +19,8 @@ add_executable(${PROJECT_NAME}
 	src/Resource/ResourceManager.cpp
 	src/Resource/ResourceManager.h
 	src/Resource/stb_image.h
+	src/Renderer/AnimatedSprite.cpp
+	src/Renderer/AnimatedSprite.h
 )
 
 # стандарт C++
