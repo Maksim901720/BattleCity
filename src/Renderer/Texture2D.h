@@ -11,13 +11,13 @@ namespace Renderer {
 
 		struct subTexture2D {
 			glm::vec2 leftBottomUV;
-			glm::vec2 rightToUV;
+			glm::vec2 rightTopUV;
 
 			subTexture2D(const glm::vec2& _leftBottomUV, const glm::vec2& _rightToUV) : 
-				leftBottomUV(_leftBottomUV), rightToUV(_rightToUV) {}
+				leftBottomUV(_leftBottomUV), rightTopUV(_rightToUV) {}
 
 			subTexture2D() : 
-				leftBottomUV(0.0f), rightToUV(1.0f) {}
+				leftBottomUV(0.0f), rightTopUV(1.0f) {}
 		};
 
 		Texture2D(const GLuint width, const GLuint height, const unsigned char *data, const int channels = 4, 

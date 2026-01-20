@@ -16,9 +16,17 @@ add_executable(${PROJECT_NAME}
 	src/Renderer/Texture2D.cpp
 	src/Renderer/Sprite.cpp
 	src/Renderer/Sprite.h
+	src/Renderer/VertexBuffer.cpp
+	src/Renderer/VertexBuffer.h
 	src/Resource/ResourceManager.cpp
 	src/Resource/ResourceManager.h
 	src/Resource/stb_image.h
+	src/Renderer/VertexBufferLayout.h
+	src/Renderer/VertexBufferLayout.cpp
+	src/Renderer/VertexArray.cpp
+	src/Renderer/VertexArray.h
+	src/Renderer/IndexBuffer.cpp
+	src/Renderer/IndexBuffer.h
 	src/Renderer/AnimatedSprite.cpp
 	src/Renderer/AnimatedSprite.h
 

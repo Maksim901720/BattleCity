@@ -62,17 +62,12 @@ namespace Renderer {
 			const GLfloat textureCoords[] = {
 				// U     V
 				subTexture.leftBottomUV.x, subTexture.leftBottomUV.y,
-				subTexture.leftBottomUV.x, subTexture.rightToUV.y,
-				subTexture.rightToUV.x,    subTexture.rightToUV.y,
-
-				subTexture.rightToUV.x,    subTexture.leftBottomUV.y,
-				subTexture.rightToUV.x,    subTexture.rightToUV.y,
-				subTexture.leftBottomUV.x, subTexture.leftBottomUV.y
+				subTexture.leftBottomUV.x, subTexture.rightTopUV.y,
+				subTexture.rightTopUV.x,    subTexture.rightTopUV.y,
+				subTexture.rightTopUV.x,    subTexture.leftBottomUV.y,
 			};
 
-			glBindBuffer(GL_ARRAY_BUFFER, m_textureCoordsVBO);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(textureCoords), textureCoords);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			m_textureCoordsBuffer.update(textureCoords, 4 * 2 * sizeof(GLfloat));
 			m_dirty = false;
 		}
 
