@@ -21,6 +21,11 @@ add_executable(${PROJECT_NAME}
 	src/Resource/stb_image.h
 	src/Renderer/AnimatedSprite.cpp
 	src/Renderer/AnimatedSprite.h
+
+	src/Game/Game.cpp
+	src/Game/Game.h
+	src/Game/Tank.h
+	src/Game/Tank.cpp
 )
 
 # стандарт C++
