@@ -5,6 +5,7 @@
 #include <memory>
 
 class Tank;
+class Level;
 
 class Game {
 public:
@@ -12,9 +13,11 @@ public:
 	~Game();
 
 	void render();
-	void update(const uint64_t delta);
+	void update(const double delta);
 	void setKey(const int key, const int action);
 	bool init();
+	size_t getCurrentLevelWidth() const;
+	size_t getCurrentLevelHeight() const;
 
 private:
 
@@ -27,5 +30,6 @@ private:
 
 	glm::ivec2 m_windowSize;
 	EGameState m_eCurrentGameState;
-	std::unique_ptr<Tank> m_pTank;
+	std::shared_ptr<Tank> m_pTank;
+	std::shared_ptr<Level> m_pLevel;
 };

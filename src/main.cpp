@@ -6,20 +6,35 @@
 #include <chrono>
 
 #include "Resource/ResourceManager.h"
-
 #include "Game/Game.h"
+#include "Renderer/Renderer.h"
+#include "Physics/PhysicsEngine.h"
 
-glm::ivec2 g_windowSize(640, 480);
-Game g_game(g_windowSize);
+glm::ivec2 g_windowSize(13 * 16, 14 * 16);
+std::unique_ptr<Game> g_game = std::make_unique<Game>(g_windowSize);
 
 // обрабатываем событие изменения окна
 void glfwWindowSizeCallback(GLFWwindow* pWindow, int width, int height)
 {
     g_windowSize.x = width;
     g_windowSize.y = height;
+    
+    const float level_aspect_ratio = static_cast<float>(g_game->getCurrentLevelWidth()) / g_game->getCurrentLevelHeight();
+    unsigned int viewPortWidth = g_windowSize.x;
+    unsigned int viewPortHeight = g_windowSize.y;
+    unsigned int viewPortLeftOffset = 0;
+    unsigned int viewPortBottomOffset = 0;
 
-    // показываем OpneGL, в какой области окна рисовать
-    glViewport(0, 0, g_windowSize.x, g_windowSize.y);
+    if (static_cast<float>(viewPortWidth) / g_windowSize.y > level_aspect_ratio) {
+        viewPortWidth = static_cast<unsigned int>(g_windowSize.y * level_aspect_ratio);
+        viewPortLeftOffset = (g_windowSize.x - viewPortWidth) / 2;
+    }
+    else {
+        viewPortHeight = static_cast<unsigned int>(g_windowSize.x / level_aspect_ratio);
+        viewPortBottomOffset = (g_windowSize.y - viewPortHeight) / 2;
+    }
+
+    RendererEngine::Renderer::setViewport(viewPortWidth, viewPortHeight, viewPortLeftOffset, viewPortBottomOffset);
 }
 
 // обрабатываем события нажатия клавиш
@@ -30,7 +45,7 @@ void glfwKeyCallback(GLFWwindow* pWindow, int key, int scancode, int action, int
         // устанавливаем флаг закрытия окна в true
         glfwSetWindowShouldClose(pWindow, GL_TRUE);
     } 
-    g_game.setKey(key, action);
+    g_game->setKey(key, action);
 }
 
 int main(int argc, char *argv[])
@@ -72,43 +87,46 @@ int main(int argc, char *argv[])
     }
 
     // печатаем информацию о версии и рендеринге OpenGL
-    std::cout << "Render: " << glGetString(GL_RENDERER) << std::endl;
-    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "Render: " << RendererEngine::Renderer::getRendererStr() << std::endl;
+    std::cout << "OpenGL version: " << RendererEngine::Renderer::getVersionStr() << std::endl;
     //std::cout << "OpenGL " << GLVersion.major << "." << GLVersion.minor << std::endl;
 
-    // установить цвет зарисовки окна при его очищении
-    glClearColor(0, 0, 0, 1);
-
+    RendererEngine::Renderer::setClearColor(0, 0, 0, 1);
+    RendererEngine::Renderer::setDepthTest(true);
+    
     {   // создаём отдельную область видимости, так как нам нужно, чтобы менеджер ресурсов освободил ресурсы до 
         // вызова glfwTerminate, который закроет контекст OpenGL
         ResourceManager::setExacutablePath(argv[0]);
-        g_game.init();
+        Physics::PhysicsEngine::init();
+        g_game->init();
+        
+        // устанавливаем размер окна
+        glfwSetWindowSize(pWindow, static_cast<int>(g_game->getCurrentLevelWidth()), static_cast<int>(g_game->getCurrentLevelHeight()));
 
         // последнее время отсчёта
         auto lastTime = std::chrono::high_resolution_clock::now();
-
+        
         // цикл до закрытия окна пользователем
         while (!glfwWindowShouldClose(pWindow))
         {
+            // обработка событий окна(ввод пользователя изменения размеров окна и т.д.)
+            glfwPollEvents();
+
             // текущее время
             auto currentTime = std::chrono::high_resolution_clock::now();
-            auto durationTime = std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime - lastTime);
-            uint64_t duration = static_cast<uint64_t>(durationTime.count());
+            double duration = std::chrono::duration<double, std::milli>(currentTime - lastTime).count();
             lastTime = currentTime;
-            g_game.update(duration);
+            g_game->update(duration);
+            Physics::PhysicsEngine::update(duration);
 
-            // очистить экран
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            g_game.render();
+            RendererEngine::Renderer::clear();
+            g_game->render();
 
             // поменять местами передний и задний буферы
             glfwSwapBuffers(pWindow);
-
-            // обработка событий окна(ввод пользователя изменения размеров окна и т.д.)
-            glfwPollEvents();
         }
     }
+    g_game = nullptr;
     ResourceManager::unloadAllResources();
 
     glfwTerminate();  // освобаждаем ресурсы

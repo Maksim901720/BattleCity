@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 
-namespace Renderer {
+namespace RendererEngine {
 
 	class AnimatedSprite : public Sprite {
 	public:
@@ -13,13 +13,10 @@ namespace Renderer {
 
 		AnimatedSprite(std::shared_ptr<Texture2D> pTexture,
 			   const std::string &initialSubTexture,
-			   std::shared_ptr<ShaderProgram> pSharedProgram, 
-			   const glm::vec2& position = glm::vec2(0.0f), 
-			   const glm::vec2& size = glm::vec2(1.0f), 
-			   const float rotation = 0.0f);
+			   std::shared_ptr<ShaderProgram> pSharedProgram);
 
 		void insertState(std::string state, state_map subTexturesDuration);
-		void render() const override;
+		void render(const glm::vec2& position, const glm::vec2& size, const float rotation) const override;
 
 		void setState(const std::string& newState);
 		void update(const uint64_t delta);

@@ -5,5 +5,8 @@ out vec4 frag_color;
 uniform sampler2D tex;
                                                         
 void main() {
-   frag_color = texture(tex, texCoords);              
+   frag_color = texture(tex, texCoords);    
+   if(frag_color.rgb == vec3(0.)) {  // если цвет пикселя чёрный
+    discard;                         // прекращаем выполнение фрагментного шейдера
+   }
 }

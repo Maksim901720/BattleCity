@@ -5,7 +5,7 @@
 #include <map>
 #include <glm/vec2.hpp>
 
-namespace Renderer {
+namespace RendererEngine {
 	class Texture2D {
 	public:
 
@@ -31,7 +31,7 @@ namespace Renderer {
 		~Texture2D();
 
 		void addSubTexture(const std::string& name, const glm::vec2& leftBottomUV, const glm::vec2& rightToUV);
-		const subTexture2D& getTexture(const std::string& name);
+		const subTexture2D& getSubTexture(const std::string& name);
 		unsigned int width() const { return m_width; }
 		unsigned int height() const { return m_height; }
 		void bind() const;

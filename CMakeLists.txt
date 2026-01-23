@@ -27,13 +27,42 @@ add_executable(${PROJECT_NAME}
 	src/Renderer/VertexArray.h
 	src/Renderer/IndexBuffer.cpp
 	src/Renderer/IndexBuffer.h
-	src/Renderer/AnimatedSprite.cpp
-	src/Renderer/AnimatedSprite.h
+	src/Renderer/Renderer.h
+	src/Renderer/Renderer.cpp
+	src/Renderer/SpriteAnimator.cpp
+	src/Renderer/SpriteAnimator.h
 
 	src/Game/Game.cpp
 	src/Game/Game.h
-	src/Game/Tank.h
-	src/Game/Tank.cpp
+	src/Game/Level.cpp
+	src/Game/Level.h
+
+	src/System/Timer.cpp
+	src/System/Timer.h
+
+	src/Physics/PhysicsEngine.h  
+	src/Physics/PhysicsEngine.cpp
+
+	src/Game/GameObjects/IGameObject.cpp
+	src/Game/GameObjects/IGameObject.h
+	src/Game/GameObjects/Tank.h
+	src/Game/GameObjects/Tank.cpp
+	src/Game/GameObjects/BrickWall.cpp
+	src/Game/GameObjects/BrickWall.h
+	src/Game/GameObjects/BetonWall.cpp
+	src/Game/GameObjects/BetonWall.h
+	src/Game/GameObjects/Trees.cpp
+	src/Game/GameObjects/Trees.h
+	src/Game/GameObjects/Ice.cpp
+	src/Game/GameObjects/Ice.h
+	src/Game/GameObjects/Water.cpp
+	src/Game/GameObjects/Water.h
+	src/Game/GameObjects/Eagle.cpp
+	src/Game/GameObjects/Eagle.h
+	src/Game/GameObjects/Border.cpp
+	src/Game/GameObjects/Border.h
+	src/Game/GameObjects/Bulet.cpp
+	src/Game/GameObjects/Bulet.h
 )
 
 # стандарт C++
@@ -49,6 +78,9 @@ target_link_libraries(${PROJECT_NAME} glad)
 
 # подключаем glm
 include_directories(external/glm)
+
+# подключаем rapidJSON
+include_directories(external/rapidjson/include)
 
 # указываем куда сохранять бинарные файлы
 # CMAKE_BINARY_DIR - путь до директории сборки

@@ -3,7 +3,7 @@
 #include <vector>
 #include <glad/glad.h>
 
-namespace Renderer {
+namespace RendererEngine {
 	struct VertexBufferLayoutElement {
 		GLint count;
 		GLenum type;
@@ -18,7 +18,7 @@ namespace Renderer {
 	public:
 		VertexBufferLayout();
 
-		void reserveElements(const size_t count);
+		void reserveElements(const int count);
 		unsigned int getStride() const { return m_stride; }
 		void addElementLayoutFloat(const unsigned int count, const bool normalized);
 		const std::vector<VertexBufferLayoutElement>& getLayoutElements() const { return m_layoutElements; }

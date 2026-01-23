@@ -4,7 +4,7 @@
 #include <string>
 #include <glm/mat4x2.hpp>
 
-namespace Renderer {
+namespace RendererEngine {
 
 	class ShaderProgram {
 	public:
@@ -13,6 +13,7 @@ namespace Renderer {
 		bool isCompiled() const { return m_isCompiled; }
 		void use() const;
 		void setInt(const std::string& name, const GLint value);
+		void setFloat(const std::string& name, const GLfloat value);
 		void setMatrix4(const std::string& name, const glm::mat4& matrix);
 		
 		ShaderProgram() = delete;

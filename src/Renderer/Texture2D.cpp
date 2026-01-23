@@ -1,6 +1,6 @@
 #include "Texture2D.h"
 
-namespace Renderer {
+namespace RendererEngine {
 
 	Texture2D::Texture2D(const GLuint width, const GLuint height, const unsigned char* data, const int channels,
 		const GLenum filter, const GLenum wrapMode)
@@ -67,7 +67,7 @@ namespace Renderer {
 		m_subTextures.emplace(name, subTexture2D(leftBottomUV, rightToUV));
 	}
 
-	const Texture2D::subTexture2D& Texture2D::getTexture(const std::string& name) 
+	const Texture2D::subTexture2D& Texture2D::getSubTexture(const std::string& name) 
 	{
 		auto it = m_subTextures.find(name);
 		if (it != m_subTextures.end())

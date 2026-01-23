@@ -3,7 +3,7 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 
-namespace Renderer {
+namespace RendererEngine {
 
 	ShaderProgram::ShaderProgram(const std::string& vertexShader, const std::string& fragmentShader)
 	{
@@ -53,7 +53,7 @@ namespace Renderer {
 		if (!success) {  // при неудаче
 			// выводим ошибку
 			GLchar infoLog[1024];
-			glGetShaderInfoLog(shaderID, 1024, nullptr, infoLog);
+			glGetProgramInfoLog(shaderID, 1024, nullptr, infoLog);
 			std::cerr << "ERROR::SHADER: Compile-time error:\n" << infoLog << std::endl;
 			return false;
 		}
@@ -98,6 +98,13 @@ namespace Renderer {
 		// соддаём переменную uniform int в шейдерной программе. glGetUniformLocation получает шейдерную программу 
 		// и имя переменной и возращает её локацию. glUniform1i установит этой переменной указанное значение
 		glUniform1i(glGetUniformLocation(m_ID, name.c_str()), value);
+	}
+
+	void ShaderProgram::setFloat(const std::string& name, const GLfloat value)
+	{
+		// соддаём переменную uniform int в шейдерной программе. glGetUniformLocation получает шейдерную программу 
+		// и имя переменной и возращает её локацию. glUniform1i установит этой переменной указанное значение
+		glUniform1f(glGetUniformLocation(m_ID, name.c_str()), value);
 	}
 
 	void ShaderProgram::setMatrix4(const std::string& name, const glm::mat4& matrix)

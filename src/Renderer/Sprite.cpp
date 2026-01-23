@@ -2,20 +2,19 @@
 
 #include "ShaderProgram.h"
 #include "Texture2D.h"
+#include "Renderer.h"
 
 #include <glm/mat4x2.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace Renderer {
+namespace RendererEngine {
 	Sprite::Sprite(std::shared_ptr<Texture2D> pTexture, 
 				   const std::string &initialSubTexture, 
-				   std::shared_ptr<ShaderProgram> pShaderProgram,
-				   const glm::vec2& position, 
-				   const glm::vec2& size, 
-				   const float rotation)
-			: m_pSharedProgram(std::move(pShaderProgram)), m_pTexture(std::move(pTexture)), 
-				m_position(position), m_size(size), m_rotation(rotation)
+				   std::shared_ptr<ShaderProgram> pShaderProgram)
+			: m_pSharedProgram(std::move(pShaderProgram)), m_pTexture(std::move(pTexture)), m_lastFrameId(0)
 	{
+		m_framesDescriptions.clear();
+
 		const GLfloat  vertexCoords[] = {
 			// 1---2
 			// | / |
@@ -29,7 +28,7 @@ namespace Renderer {
 			1.0f, 0.0f	
 		};
 		 
-		auto subTexture = m_pTexture->getTexture(initialSubTexture);
+		auto subTexture = m_pTexture->getSubTexture(initialSubTexture);
 
 		const GLfloat textureCoords[] = {
 			// U     V
@@ -54,7 +53,7 @@ namespace Renderer {
 		textureCoordsLayout.addElementLayoutFloat(2, false);
 		m_vertexArray.addBuffer(m_textureCoordsBuffer, textureCoordsLayout);
 
-		m_indexBuffer.init(indces, 6 * sizeof(GLuint));
+		m_indexBuffer.init(indces, 6);
 
 		m_vertexArray.unbind();
 		m_indexBuffer.unbind();
@@ -64,44 +63,58 @@ namespace Renderer {
 	{
 	}
 
-	void Sprite::render() const
+	void Sprite::render(const glm::vec2& position, const glm::vec2& size, const float rotation, 
+		const float layer, const size_t frameId) const
 	{
-		m_pSharedProgram->use();
+		if (m_lastFrameId != frameId && !m_framesDescriptions.empty()) {
+			const FrameDescription& currentFrameDescription = m_framesDescriptions[frameId];
 
+			const GLfloat textureCoords[] = {
+				// U     V
+				currentFrameDescription.leftBottomUV.x, currentFrameDescription.leftBottomUV.y,
+				currentFrameDescription.leftBottomUV.x, currentFrameDescription.rightTopUV.y,
+				currentFrameDescription.rightTopUV.x,    currentFrameDescription.rightTopUV.y,
+				currentFrameDescription.rightTopUV.x,    currentFrameDescription.leftBottomUV.y,
+			};
+
+			m_textureCoordsBuffer.update(textureCoords, 4 * 2 * sizeof(GLfloat));
+			m_lastFrameId = frameId;
+		}
+		
+		m_pSharedProgram->use();
 		glm::mat4 model(1.f);
 
 		// ÄÅÉÑÒÂÈß ÁÓÄÓÒ ÂÎÑÏÐÎÈÇÂÎÄÈÒÑß Â ÎÁÐÀÒÍÎÌ ÏÎÐßÄÊÅ
 		// ìåíÿåì ïîçèöèþ ñïðàéòà
-		model = glm::translate(model, glm::vec3(m_position, 0.0f));
+		model = glm::translate(model, glm::vec3(position, 0.0f));
 		// âðàùàåì îòíîñèòåëüíî öåíòðàëüíîé îñè
-		model = glm::translate(model, glm::vec3(0.5f * m_size.x, 0.5 * m_size.y, 0.0f));
-		model = glm::rotate(model, glm::radians(m_rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-		model = glm::translate(model, glm::vec3(-0.5f * m_size.x, -0.5 * m_size.y, 0.0f));
+		model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5 * size.y, 0.0f));
+		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+		model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5 * size.y, 0.0f));
 		// èçìåíÿåì ðàçìåð
-		model = glm::scale(model, glm::vec3(m_size, 1.0));
+		model = glm::scale(model, glm::vec3(size, 1.0));
 
-		m_vertexArray.bind();
 		m_pSharedProgram->setMatrix4("modelMat", model);
+		m_pSharedProgram->setFloat("layer", layer);
 
 		glActiveTexture(GL_TEXTURE0);
-		m_pTexture->bind();
+		m_pTexture->bind();		
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-		m_vertexArray.unbind();
+		Renderer::draw(m_vertexArray, m_indexBuffer, *m_pSharedProgram);
 	}
 
-	void Sprite::setPosition(const glm::vec2& position)
+	void Sprite::insertFrames(std::vector<FrameDescription> framesDescriptions)
 	{
-		m_position = position;
+		m_framesDescriptions = std::move(framesDescriptions);
 	}
 
-	void Sprite::setSize(const glm::vec2& size)
+	double Sprite::getFrameDuration(const size_t frameId) const
 	{
-		m_size = size;
+		return m_framesDescriptions[frameId].duration;
 	}
 
-	void Sprite::setRotation(const float rotation)
+	size_t Sprite::getFramesCount() const
 	{
-		m_rotation = rotation;
+		return m_framesDescriptions.size();
 	}
 }
