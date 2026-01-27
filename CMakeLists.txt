@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 set(PROJECT_NAME BattleCity)
 project(${PROJECT_NAME})
@@ -34,8 +34,6 @@ add_executable(${PROJECT_NAME}
 
 	src/Game/Game.cpp
 	src/Game/Game.h
-	src/Game/Level.cpp
-	src/Game/Level.h
 
 	src/System/Timer.cpp
 	src/System/Timer.h
@@ -63,7 +61,19 @@ add_executable(${PROJECT_NAME}
 	src/Game/GameObjects/Border.h
 	src/Game/GameObjects/Bulet.cpp
 	src/Game/GameObjects/Bulet.h
+
+	src/Game/GameStates/IGameState.h
+	src/Game/GameStates/StartScreen.cpp
+	src/Game/GameStates/StartScreen.h
+	src/Game/GameStates/Level.cpp
+	src/Game/GameStates/Level.h
+
+	src/Game/AIComponent.cpp
+	src/Game/AIComponent.h
 )
+
+# задаём начальный стартовый проект в visual studio
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
 # стандарт C++
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
@@ -77,7 +87,8 @@ add_subdirectory(external/glad)
 target_link_libraries(${PROJECT_NAME} glad)
 
 # подключаем glm
-include_directories(external/glm)
+add_subdirectory(external/glm)
+target_link_libraries(${PROJECT_NAME} glm)
 
 # подключаем rapidJSON
 include_directories(external/rapidjson/include)

@@ -16,12 +16,13 @@ BrickWall::EBrickState BrickWall::getBrickStateAfterCollision(const EBrickState 
 		case Physics::ECollisionDirection::Left:
 			return EBrickState::Right;
 		case Physics::ECollisionDirection::Right:
-			return EBrickState::Right;
+			return EBrickState::Left;
 		case Physics::ECollisionDirection::Top:
-			return EBrickState::Right;
+			return EBrickState::Bottom;
 		case Physics::ECollisionDirection::Bottom:
-			return EBrickState::Right;
+			return EBrickState::Top;
 		}
+		return EBrickState::Destroyed;
 
 	case EBrickState::Top:
 		switch (direction)
@@ -35,6 +36,7 @@ BrickWall::EBrickState BrickWall::getBrickStateAfterCollision(const EBrickState 
 		case Physics::ECollisionDirection::Bottom:
 			return EBrickState::Destroyed;
 		}
+		return EBrickState::Destroyed;
 
 	case EBrickState::Bottom:
 		switch (direction)
@@ -48,6 +50,7 @@ BrickWall::EBrickState BrickWall::getBrickStateAfterCollision(const EBrickState 
 		case Physics::ECollisionDirection::Bottom:
 			return EBrickState::Destroyed;
 		}
+		return EBrickState::Destroyed;
 
 	case EBrickState::Left:
 		switch (direction)
@@ -61,6 +64,7 @@ BrickWall::EBrickState BrickWall::getBrickStateAfterCollision(const EBrickState 
 		case Physics::ECollisionDirection::Bottom:
 			return EBrickState::TopLeft;
 		}
+		return EBrickState::Destroyed;
 
 	case EBrickState::Right:
 		switch (direction)
@@ -74,6 +78,7 @@ BrickWall::EBrickState BrickWall::getBrickStateAfterCollision(const EBrickState 
 		case Physics::ECollisionDirection::Bottom:
 			return EBrickState::TopRight;
 		}
+		return EBrickState::Destroyed;
 
 	default:
 		return EBrickState::Destroyed;
@@ -83,7 +88,8 @@ BrickWall::EBrickState BrickWall::getBrickStateAfterCollision(const EBrickState 
 Physics::AABB BrickWall::getAABBForBrickState(const EBrickLocation location, const EBrickState eBrickState, const glm::vec2& size)
 {
 	glm::vec2 blockOffset(0);
-	switch (location) {
+	switch (location)
+	{
 	case EBrickLocation::BottomLeft:
 		break;
 	case EBrickLocation::BottomRight:
@@ -99,44 +105,60 @@ Physics::AABB BrickWall::getAABBForBrickState(const EBrickLocation location, con
 
 	glm::vec2 bottomLeft(0);
 	glm::vec2 topRight(0);
-	switch (eBrickState) {
+	switch (eBrickState)
+	{
 	case EBrickState::All:
-		topRight   = glm::vec2(size.x / 2, size.y / 4);
+		topRight = glm::vec2(size.x / 2, size.y / 2);
 		break;
 	case EBrickState::TopLeft:
 		bottomLeft = glm::vec2(0, size.y / 4);
-		topRight   = glm::vec2(size.x / 4, size.y / 2);
+		topRight = glm::vec2(size.x / 4, size.y / 2);
 		break;
 	case EBrickState::TopRight:
 		bottomLeft = glm::vec2(size.x / 4, size.y / 4);
-		topRight   = glm::vec2(size.x / 2, size.y / 2);
-		break;
-	case EBrickState::BottomLeft:
-		topRight = glm::vec2(size.x / 4, size.y / 4);
-		break;
-	case EBrickState::BottomRight:
-		bottomLeft = glm::vec2(size.x / 4, 0);
-		topRight = glm::vec2(size.x / 2, size.y / 4);
+		topRight = glm::vec2(size.x / 2, size.y / 2);
 		break;
 	case EBrickState::Top:
 		bottomLeft = glm::vec2(0, size.y / 4);
 		topRight = glm::vec2(size.x / 2, size.y / 2);
 		break;
-	case EBrickState::Bottom:
-		topRight = glm::vec2(size.x / 4, size.y / 2);
+	case EBrickState::BottomLeft:
+		topRight = glm::vec2(size.x / 4, size.y / 4);
 		break;
 	case EBrickState::Left:
 		topRight = glm::vec2(size.x / 4, size.y / 2);
 		break;
+	case EBrickState::TopRight_BottomLeft:
+		topRight = glm::vec2(size.x / 2, size.y / 2);
+		break;
+	case EBrickState::Top_BottomLeft:
+		topRight = glm::vec2(size.x / 2, size.y / 2);
+		break;
+	case EBrickState::BottomRight:
+		bottomLeft = glm::vec2(size.x / 4, 0);
+		topRight = glm::vec2(size.x / 2, size.y / 4);
+		break;
+	case EBrickState::TopLeft_BottomRight:
+		topRight = glm::vec2(size.x / 2, size.y / 2);
+		break;
 	case EBrickState::Right:
-		bottomLeft = glm::vec2(size.x / 2, 0);
-		topRight = glm::vec2(size.x / 4, size.y / 2);
+		bottomLeft = glm::vec2(size.x / 4, 0);
+		topRight = glm::vec2(size.x / 2, size.y / 2);
+		break;
+	case EBrickState::Top_BottomRight:
+		topRight = glm::vec2(size.x / 2, size.y / 2);
+		break;
+	case EBrickState::Bottom:
+		topRight = glm::vec2(size.x / 2, size.y / 4);
+		break;
+	case EBrickState::TopLeft_Bottom:
+		topRight = glm::vec2(size.x / 2, size.y / 2);
+		break;
+	case EBrickState::TopRight_Bottom:
+		topRight = glm::vec2(size.x / 2, size.y / 2);
 		break;
 	case EBrickState::Destroyed:
 		break;
-	default:
-		bottomLeft = size / 2.f;
-		topRight = size / 2.f;
 	}
 
 	return { bottomLeft + blockOffset, topRight + blockOffset };

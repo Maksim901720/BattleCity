@@ -4,20 +4,30 @@
 #include <array>
 #include <memory>
 
-class Tank;
-class Level;
+class IGameState;
+namespace RendererEngine {
+	class ShaderProgram;
+}
 
 class Game {
 public:
-	Game(const glm::ivec2& g_windowSize);
+	enum class GameMode {
+		OnePlayer, TwoPlayer
+	};
+
+	Game(const glm::uvec2& g_windowSize);
 	~Game();
 
 	void render();
 	void update(const double delta);
 	void setKey(const int key, const int action);
 	bool init();
-	size_t getCurrentLevelWidth() const;
-	size_t getCurrentLevelHeight() const;
+	size_t getCurrentWidth() const;
+	size_t getCurrentHeight() const;
+	void startNewLevel(const size_t level, const GameMode eGameMode);
+	void setWindowSize(const glm::uvec2& g_windowSize);
+	void updateViewport();
+	void nextLevel(const GameMode eGameMode);
 
 private:
 
@@ -25,11 +35,13 @@ private:
 	std::array<bool, 349> m_keys;
 
 	enum class EGameState {
-		Active, Pause
+		StartScreen, LevelStart, Level, Pause, Scores, GameOver
 	};
 
 	glm::ivec2 m_windowSize;
 	EGameState m_eCurrentGameState;
-	std::shared_ptr<Tank> m_pTank;
-	std::shared_ptr<Level> m_pLevel;
+
+	std::shared_ptr<IGameState> m_pCurrentGameState;
+	std::shared_ptr<RendererEngine::ShaderProgram> m_pSpriteShaderProgram;
+	size_t m_currentLevelIndex;
 };

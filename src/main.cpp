@@ -10,7 +10,9 @@
 #include "Renderer/Renderer.h"
 #include "Physics/PhysicsEngine.h"
 
-glm::ivec2 g_windowSize(13 * 16, 14 * 16);
+static constexpr unsigned int SCALE = 3;
+static constexpr unsigned int BLOCK_SIZE = 16;
+glm::uvec2 g_windowSize(16 * BLOCK_SIZE, 15 * BLOCK_SIZE);
 std::unique_ptr<Game> g_game = std::make_unique<Game>(g_windowSize);
 
 // обрабатываем событие изменения окна
@@ -18,23 +20,7 @@ void glfwWindowSizeCallback(GLFWwindow* pWindow, int width, int height)
 {
     g_windowSize.x = width;
     g_windowSize.y = height;
-    
-    const float level_aspect_ratio = static_cast<float>(g_game->getCurrentLevelWidth()) / g_game->getCurrentLevelHeight();
-    unsigned int viewPortWidth = g_windowSize.x;
-    unsigned int viewPortHeight = g_windowSize.y;
-    unsigned int viewPortLeftOffset = 0;
-    unsigned int viewPortBottomOffset = 0;
-
-    if (static_cast<float>(viewPortWidth) / g_windowSize.y > level_aspect_ratio) {
-        viewPortWidth = static_cast<unsigned int>(g_windowSize.y * level_aspect_ratio);
-        viewPortLeftOffset = (g_windowSize.x - viewPortWidth) / 2;
-    }
-    else {
-        viewPortHeight = static_cast<unsigned int>(g_windowSize.x / level_aspect_ratio);
-        viewPortBottomOffset = (g_windowSize.y - viewPortHeight) / 2;
-    }
-
-    RendererEngine::Renderer::setViewport(viewPortWidth, viewPortHeight, viewPortLeftOffset, viewPortBottomOffset);
+    g_game->setWindowSize(g_windowSize);
 }
 
 // обрабатываем события нажатия клавиш
@@ -101,7 +87,7 @@ int main(int argc, char *argv[])
         g_game->init();
         
         // устанавливаем размер окна
-        glfwSetWindowSize(pWindow, static_cast<int>(g_game->getCurrentLevelWidth()), static_cast<int>(g_game->getCurrentLevelHeight()));
+        //glfwSetWindowSize(pWindow, static_cast<int>(g_game->getCurrentWidth()), static_cast<int>(g_game->getCurrentHeight()));
 
         // последнее время отсчёта
         auto lastTime = std::chrono::high_resolution_clock::now();

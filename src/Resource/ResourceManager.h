@@ -44,6 +44,7 @@ public:
 	static bool loadJSONResources(const std::string& JSONpath);
 
 	static const std::vector<std::vector<std::string>>& getLevels() { return m_levels; }
+	static const std::vector<std::string>& getStartScreen() { return m_startScreen; }
 
 private:
 
@@ -59,6 +60,7 @@ private:
 	static SpritesMaps m_sprites;
 
 	static std::vector<std::vector<std::string>> m_levels;
+	static std::vector<std::string> m_startScreen;
 	
 	static std::string m_path;
 };
